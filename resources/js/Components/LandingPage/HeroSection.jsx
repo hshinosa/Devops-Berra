@@ -118,7 +118,7 @@ const HeroSection = ({ availableVersions = [] }) => {
                             {availableVersions.length > 0 ? (
                                 <a
                                     href={availableVersions[0].download_url}
-                                    className="inline-flex items-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                    className="inline-flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                                     download
                                 >
                                     <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
@@ -157,7 +157,7 @@ const HeroSection = ({ availableVersions = [] }) => {
                             ) : (
                                 <a
                                     href="#"
-                                    className="inline-flex items-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                    className="inline-flex items-center px-8 py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         alert(

@@ -86,8 +86,8 @@ const CTASection = ({ availableVersions = [] }) => {    const benefits = [
 
                 {/* Download buttons */}
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16 animate-fade-in-up-delay-2">
-                    <button
-                        onClick={() => handleDownload('android')}
+                    <a
+                        href='#beranda'
                         className="group bg-white hover:bg-gray-100 text-gray-900 px-8 py-4 rounded-2xl font-bold text-lg flex items-center space-x-4 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 min-w-[280px]"
                     >
                         <div className="flex items-center space-x-3">
@@ -105,7 +105,7 @@ const CTASection = ({ availableVersions = [] }) => {    const benefits = [
                             </div>
                         </div>
                         <div className="text-2xl group-hover:translate-x-1 transition-transform">→</div>
-                    </button>                    <div className="group bg-gray-600 text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center space-x-4 shadow-2xl opacity-75 cursor-not-allowed min-w-[280px]">
+                    </a>                    <div className="group bg-gray-600 text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center space-x-4 shadow-2xl opacity-75 cursor-not-allowed min-w-[280px]">
                         <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center">
                                 <span className="text-white text-2xl">🍎</span>
