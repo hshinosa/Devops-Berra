@@ -13,6 +13,8 @@ export default function Register() {
         password_confirmation: '',
     });
 
+    const hasErrors = Object.keys(errors).length > 0;
+
     const submit = (e) => {
         e.preventDefault();
 
@@ -21,11 +23,20 @@ export default function Register() {
         });
     };
 
+    const inputClass = (field) =>
+        `mt-1 block w-full ${errors[field] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`;
+
     return (
         <GuestLayout>
-            <Head title="Register" />
+            <Head title="Register ApliKasir" />
 
-            <form onSubmit={submit}>
+            {hasErrors && (
+                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
+                    Terdapat kesalahan pada form. Silakan periksa kembali.
+                </div>
+            )}
+
+            <form onSubmit={submit} noValidate>
                 <div>
                     <InputLabel htmlFor="name" value="Name" />
 
@@ -33,11 +44,11 @@ export default function Register() {
                         id="name"
                         name="name"
                         value={data.name}
-                        className="mt-1 block w-full"
+                        className={inputClass('name')}
                         autoComplete="name"
                         isFocused={true}
+                        placeholder="Nama lengkap"
                         onChange={(e) => setData('name', e.target.value)}
-                        required
                     />
 
                     <InputError message={errors.name} className="mt-2" />
@@ -51,10 +62,10 @@ export default function Register() {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className={inputClass('email')}
                         autoComplete="username"
+                        placeholder="admin@example.com"
                         onChange={(e) => setData('email', e.target.value)}
-                        required
                     />
 
                     <InputError message={errors.email} className="mt-2" />
@@ -68,10 +79,10 @@ export default function Register() {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className={inputClass('password')}
                         autoComplete="new-password"
+                        placeholder="Minimal 8 karakter"
                         onChange={(e) => setData('password', e.target.value)}
-                        required
                     />
 
                     <InputError message={errors.password} className="mt-2" />
@@ -88,12 +99,12 @@ export default function Register() {
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        className="mt-1 block w-full"
+                        className={inputClass('password_confirmation')}
                         autoComplete="new-password"
+                        placeholder="Ulangi password"
                         onChange={(e) =>
                             setData('password_confirmation', e.target.value)
                         }
-                        required
                     />
 
                     <InputError
@@ -111,7 +122,7 @@ export default function Register() {
                     </Link>
 
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Register
+                        {processing ? 'Registering...' : 'Register'}
                     </PrimaryButton>
                 </div>
             </form>

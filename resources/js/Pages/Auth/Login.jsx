@@ -26,12 +26,18 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in ApliKasir" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 rounded-md bg-green-50 p-3 text-sm font-medium text-green-700">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            {errors.email && errors.email.includes('credentials') && (
+                <div className="mb-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
+                    Email atau password salah. Silakan coba lagi.
+                </div>
+            )}
+
+            <form onSubmit={submit} noValidate>
                 <div>
                     <InputLabel htmlFor="email" value="Email" />
 
@@ -40,9 +46,10 @@ export default function Login({ status, canResetPassword }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="mt-1 block w-full"
+                        className={`mt-1 block w-full ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                         autoComplete="username"
                         isFocused={true}
+                        placeholder="admin@example.com"
                         onChange={(e) => setData('email', e.target.value)}
                     />
 
@@ -57,8 +64,9 @@ export default function Login({ status, canResetPassword }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="mt-1 block w-full"
+                        className={`mt-1 block w-full ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                         autoComplete="current-password"
+                        placeholder="••••••••"
                         onChange={(e) => setData('password', e.target.value)}
                     />
 
@@ -91,7 +99,7 @@ export default function Login({ status, canResetPassword }) {
                     )}
 
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
+                        {processing ? 'Logging in...' : 'Log in'}
                     </PrimaryButton>
                 </div>
             </form>

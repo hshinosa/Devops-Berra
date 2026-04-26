@@ -2,14 +2,14 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Unified ApliKasir Database Schema
      * Combines both web and mobile requirements into a single comprehensive schema
      * Based on mobile_to_mysql_schema.sql from aplikasir-backend
@@ -27,7 +27,7 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('users');
         Schema::dropIfExists('admins');
-        
+
         // Drop cache and job tables
         Schema::dropIfExists('cache');
         Schema::dropIfExists('cache_locks');
@@ -47,7 +47,7 @@ return new class extends Migration
             $table->boolean('is_super_admin')->default(false);
             $table->rememberToken();
             $table->timestamps();
-            
+
             // Indexes
             $table->index('email');
             $table->index('is_super_admin');
@@ -67,17 +67,17 @@ return new class extends Migration
             $table->string('passwordHash');
             $table->text('profileImagePath')->nullable();
             $table->string('kodeQR', 191)->nullable()->unique()
-                  ->comment('Kode QRIS untuk pembayaran mobile');
+                ->comment('Kode QRIS untuk pembayaran mobile');
             $table->timestamp('last_sync_time')->nullable()
-                  ->comment('Timestamp sinkronisasi terakhir dari server');
+                ->comment('Timestamp sinkronisasi terakhir dari server');
             $table->boolean('is_active')->default(true);
             $table->decimal('credit_limit', 15, 2)->default(0.00)
-                  ->comment('Batas kredit untuk transaksi hutang');
+                ->comment('Batas kredit untuk transaksi hutang');
             $table->json('sync_settings')->nullable()
-                  ->comment('Pengaturan sinkronisasi mobile');
+                ->comment('Pengaturan sinkronisasi mobile');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes for sync optimization
             $table->index('email');
             $table->index('phoneNumber');
@@ -99,15 +99,15 @@ return new class extends Migration
             $table->text('deskripsi')->nullable();
             $table->string('gambar_produk')->nullable();
             $table->decimal('harga_referensi', 15, 2)->nullable()
-                  ->comment('Harga referensi dari supplier');
+                ->comment('Harga referensi dari supplier');
             $table->string('satuan', 50)->default('pcs')
-                  ->comment('Satuan produk (pcs, kg, liter, dll)');
+                ->comment('Satuan produk (pcs, kg, liter, dll)');
             $table->string('barcode', 100)->nullable()->unique()
-                  ->comment('Barcode produk untuk scanning');
+                ->comment('Barcode produk untuk scanning');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('kode_produk');
             $table->index('nama_produk');
@@ -126,7 +126,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('global_product_id')->nullable()
-                  ->constrained('global_products')->nullOnDelete();
+                ->constrained('global_products')->nullOnDelete();
             $table->string('nama_produk');
             $table->string('kode_produk', 100)->nullable();
             $table->integer('jumlah_produk')->default(0);
@@ -139,15 +139,15 @@ return new class extends Migration
             $table->string('satuan', 50)->default('pcs');
             $table->string('barcode', 100)->nullable();
             $table->integer('stok_minimum')->default(0)
-                  ->comment('Batas minimum stok untuk notifikasi');
+                ->comment('Batas minimum stok untuk notifikasi');
             $table->boolean('is_active')->default(true);
             $table->decimal('diskon_persen', 5, 2)->default(0.00)
-                  ->comment('Diskon dalam persen');
+                ->comment('Diskon dalam persen');
             $table->decimal('diskon_nominal', 15, 2)->default(0.00)
-                  ->comment('Diskon dalam nominal rupiah');
+                ->comment('Diskon dalam nominal rupiah');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes for sync optimization
             $table->index('user_id');
             $table->index('global_product_id');
@@ -157,7 +157,7 @@ return new class extends Migration
             $table->index(['user_id', 'updated_at', 'deleted_at']); // For sync queries
             $table->index(['id', 'updated_at']); // For conflict detection
             $table->index('barcode');
-            
+
             // Unique constraints
             $table->unique(['user_id', 'kode_produk'], 'unique_product_code_user');
             $table->unique(['user_id', 'barcode'], 'unique_product_barcode_user');
@@ -178,16 +178,16 @@ return new class extends Migration
             $table->date('tanggal_lahir')->nullable();
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
             $table->decimal('credit_limit', 15, 2)->default(0.00)
-                  ->comment('Batas kredit pelanggan');
+                ->comment('Batas kredit pelanggan');
             $table->decimal('total_hutang', 15, 2)->default(0.00)
-                  ->comment('Total hutang saat ini');
+                ->comment('Total hutang saat ini');
             $table->string('kategori_pelanggan', 50)->default('Regular')
-                  ->comment('VIP, Regular, Wholesale, dll');
+                ->comment('VIP, Regular, Wholesale, dll');
             $table->text('catatan')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('user_id');
             $table->index(['user_id', 'nama_pelanggan']);
@@ -213,27 +213,27 @@ return new class extends Migration
             $table->string('metode_pembayaran', 50);
             $table->string('status_pembayaran', 50);
             $table->foreignId('id_pelanggan')->nullable()
-                  ->constrained('customers')->nullOnDelete();
+                ->constrained('customers')->nullOnDelete();
             $table->json('detail_items');
             $table->decimal('jumlah_bayar', 15, 2)->nullable();
             $table->decimal('jumlah_kembali', 15, 2)->nullable();
             $table->unsignedBigInteger('id_transaksi_hutang')->nullable()
-                  ->comment('Referensi ke ID transaksi hutang yang dilunasi');
+                ->comment('Referensi ke ID transaksi hutang yang dilunasi');
             $table->string('nomor_nota', 100)->nullable()
-                  ->comment('Nomor nota/struk transaksi');
+                ->comment('Nomor nota/struk transaksi');
             $table->decimal('total_diskon', 15, 2)->default(0.00)
-                  ->comment('Total diskon yang diberikan');
+                ->comment('Total diskon yang diberikan');
             $table->decimal('pajak', 15, 2)->default(0.00)
-                  ->comment('Pajak yang dikenakan');
+                ->comment('Pajak yang dikenakan');
             $table->string('kasir', 100)->nullable()
-                  ->comment('Nama kasir yang melayani');
+                ->comment('Nama kasir yang melayani');
             $table->text('catatan')->nullable()
-                  ->comment('Catatan tambahan transaksi');
+                ->comment('Catatan tambahan transaksi');
             $table->string('shift', 50)->nullable()
-                  ->comment('Shift kerja saat transaksi');
+                ->comment('Shift kerja saat transaksi');
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes
             $table->index('user_id');
             $table->index(['user_id', 'tanggal_transaksi']);
@@ -246,10 +246,10 @@ return new class extends Migration
             $table->index('tanggal_transaksi');
             $table->index('kasir');
             $table->index('shift');
-            
+
             // Self-referencing foreign key
             $table->foreign('id_transaksi_hutang')
-                  ->references('id')->on('transactions')->nullOnDelete();
+                ->references('id')->on('transactions')->nullOnDelete();
         });
 
         // ===========================================
@@ -262,30 +262,30 @@ return new class extends Migration
             $table->dateTime('sync_start_time')->useCurrent();
             $table->dateTime('sync_end_time')->nullable();
             $table->string('direction', 10)
-                  ->comment('"Up" (Client -> Server) or "Down" (Server -> Client)');
+                ->comment('"Up" (Client -> Server) or "Down" (Server -> Client)');
             $table->string('status', 50)
-                  ->comment('Success, Partial Failure, Failed, Pending');
+                ->comment('Success, Partial Failure, Failed, Pending');
             $table->integer('items_uploaded')->default(0);
             $table->integer('items_downloaded')->default(0);
             $table->integer('conflicts_detected')->default(0);
             $table->integer('conflicts_resolved')->default(0);
             $table->text('error_message')->nullable();
             $table->json('details')->nullable()
-                  ->comment('Store counts per table, specific errors, performance metrics');
+                ->comment('Store counts per table, specific errors, performance metrics');
             $table->dateTime('client_last_sync_time')->nullable()
-                  ->comment('Timestamp terakhir klien sebelum sync ini');
+                ->comment('Timestamp terakhir klien sebelum sync ini');
             $table->dateTime('server_sync_time')->nullable()
-                  ->comment('Timestamp server saat sync ini selesai');
+                ->comment('Timestamp server saat sync ini selesai');
             $table->integer('duration_ms')->nullable()
-                  ->comment('Durasi sync dalam milliseconds');
+                ->comment('Durasi sync dalam milliseconds');
             $table->decimal('data_size_kb', 10, 2)->nullable()
-                  ->comment('Ukuran data yang disinkronkan dalam KB');
+                ->comment('Ukuran data yang disinkronkan dalam KB');
             $table->string('app_version', 50)->nullable()
-                  ->comment('Versi aplikasi mobile saat sync');
+                ->comment('Versi aplikasi mobile saat sync');
             $table->string('device_info', 255)->nullable()
-                  ->comment('Informasi device mobile');
+                ->comment('Informasi device mobile');
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['user_id', 'sync_start_time']);
             $table->index(['status', 'sync_start_time']);
@@ -307,11 +307,11 @@ return new class extends Migration
             $table->string('ip_address', 45)->nullable();
             $table->string('user_agent')->nullable();
             $table->unsignedBigInteger('target_id')->nullable()
-                  ->comment('ID of the affected record');
+                ->comment('ID of the affected record');
             $table->string('target_type', 100)->nullable()
-                  ->comment('Type/model of the affected record');
+                ->comment('Type/model of the affected record');
             $table->timestamps();
-            
+
             // Indexes
             $table->index(['admin_id', 'created_at']);
             $table->index(['module', 'action']);
@@ -422,7 +422,7 @@ return new class extends Migration
      */
     private function createSyncViews(): void
     {
-        if (DB::getDriverName() === 'sqlite') {
+        if (DB::connection()->getDriverName() === 'sqlite') {
             return;
         }
 
@@ -588,5 +588,5 @@ CREATE VIEW customer_transaction_summary AS
 SQL);
     }
 
-// Triggers removed
+    // Triggers removed
 };
