@@ -11,6 +11,7 @@ export default function Index({ users, filters = {}, auth }) {
     const { flash } = usePage().props || {};
     const [deleting, setDeleting] = useState(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || '');
 
     const confirmDelete = (userId) => {
         setDeleting(userId);
@@ -20,14 +21,37 @@ export default function Index({ users, filters = {}, auth }) {
         setDeleting(null);
     };
     
-    const handleSearch = (e) => {
-        e.preventDefault();
-        router.get(route('users.index'), {
+    const applyFilters = (overrides = {}) => {
+        const params = {
             search: searchTerm,
-        }, {
+            status: statusFilter,
+            ...overrides,
+        };
+        // Hapus parameter kosong
+        Object.keys(params).forEach(key => {
+            if (!params[key]) delete params[key];
+        });
+        router.get(route('users.index'), params, {
             preserveState: true,
             replace: true,
         });
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        applyFilters();
+    };
+
+    const handleStatusChange = (e) => {
+        const value = e.target.value;
+        setStatusFilter(value);
+        applyFilters({ status: value });
+    };
+
+    const handleReset = () => {
+        setSearchTerm('');
+        setStatusFilter('');
+        router.get(route('users.index'));
     };
     
     return (
@@ -73,6 +97,17 @@ export default function Index({ users, filters = {}, auth }) {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
+                                <div>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={handleStatusChange}
+                                        className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                    >
+                                        <option value="">Semua Status</option>
+                                        <option value="has_store">Punya Toko</option>
+                                        <option value="no_store">Belum Punya Toko</option>
+                                    </select>
+                                </div>
                                 <div className="flex gap-2">
                                     <button 
                                         type="submit"
@@ -80,13 +115,10 @@ export default function Index({ users, filters = {}, auth }) {
                                     >
                                         Cari
                                     </button>
-                                    {searchTerm && (
+                                    {(searchTerm || statusFilter) && (
                                         <button 
                                             type="button"
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                router.get(route('users.index'));
-                                            }}
+                                            onClick={handleReset}
                                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-300"
                                         >
                                             Reset

@@ -20,6 +20,16 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $status = $request->input('status');
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+
+        // Validasi kolom sort yang diizinkan
+        $allowedSorts = ['name', 'email', 'storeName', 'created_at'];
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
+        $sortDir = in_array($sortDir, ['asc', 'desc']) ? $sortDir : 'desc';
 
         $query = User::select('id', 'name', 'email', 'phoneNumber', 'storeName', 'created_at');
 
@@ -33,7 +43,16 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->orderBy('created_at', 'desc')
+        // Apply status filter
+        if ($status === 'has_store') {
+            $query->whereNotNull('storeName')->where('storeName', '!=', '');
+        } elseif ($status === 'no_store') {
+            $query->where(function ($q) {
+                $q->whereNull('storeName')->orWhere('storeName', '');
+            });
+        }
+
+        $users = $query->orderBy($sortBy, $sortDir)
             ->paginate(10)
             ->withQueryString();
 
@@ -41,6 +60,9 @@ class UserController extends Controller
             'users' => $users,
             'filters' => [
                 'search' => $search,
+                'status' => $status,
+                'sort_by' => $sortBy,
+                'sort_dir' => $sortDir,
             ],
         ]);
     }
