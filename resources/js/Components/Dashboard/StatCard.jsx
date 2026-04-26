@@ -10,6 +10,21 @@ const IconComponent = ({ iconName }) => {
         bgColor = 'bg-indigo-100';
         textColor = 'text-indigo-600';
     }
+    if (iconName === 'BoxIcon' || iconName === 'CubeIcon') {
+        iconChar = '📦';
+        bgColor = 'bg-amber-100';
+        textColor = 'text-amber-600';
+    }
+    if (iconName === 'ShoppingCartIcon' || iconName === 'BanknotesIcon') {
+        iconChar = '🛒';
+        bgColor = 'bg-emerald-100';
+        textColor = 'text-emerald-600';
+    }
+    if (iconName === 'ActivityIcon' || iconName === 'ClockIcon') {
+        iconChar = '⏳';
+        bgColor = 'bg-rose-100';
+        textColor = 'text-rose-600';
+    }
     if (iconName === 'ScanIcon') {
         iconChar = '🔍';
         bgColor = 'bg-sky-100';
