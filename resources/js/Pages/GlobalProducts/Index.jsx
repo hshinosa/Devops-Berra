@@ -6,11 +6,13 @@ import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
 import PageTransition from '@/Components/PageTransition';
 import FlashMessage from '@/Components/FlashMessage';
 
-export default function Index({ products, filters = {} }) {
+export default function Index({ products, filters = {}, filterOptions = {} }) {
     const { flash } = usePage().props || {};
     const [deleting, setDeleting] = useState(null);
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [activeFilter, setActiveFilter] = useState(filters.filter || '');
+    const [selectedKategori, setSelectedKategori] = useState(filters.kategori || '');
+    const [selectedMerek, setSelectedMerek] = useState(filters.merek || '');
 
     const confirmDelete = (productId) => {
         setDeleting(productId);
@@ -25,6 +27,8 @@ export default function Index({ products, filters = {} }) {
         router.get(route('global-products.index'), {
             search: searchTerm,
             filter: activeFilter,
+            kategori: selectedKategori,
+            merek: selectedMerek,
         }, {
             preserveState: true,
             replace: true,
@@ -36,8 +40,47 @@ export default function Index({ products, filters = {} }) {
         router.get(route('global-products.index'), {
             search: searchTerm,
             filter: filter,
+            kategori: selectedKategori,
+            merek: selectedMerek,
         }, {
             preserveState: true,
+            replace: true,
+        });
+    };
+    
+    const handleKategoriChange = (e) => {
+        setSelectedKategori(e.target.value);
+        router.get(route('global-products.index'), {
+            search: searchTerm,
+            filter: activeFilter,
+            kategori: e.target.value,
+            merek: selectedMerek,
+        }, {
+            preserveState: true,
+            replace: true,
+        });
+    };
+    
+    const handleMerekChange = (e) => {
+        setSelectedMerek(e.target.value);
+        router.get(route('global-products.index'), {
+            search: searchTerm,
+            filter: activeFilter,
+            kategori: selectedKategori,
+            merek: e.target.value,
+        }, {
+            preserveState: true,
+            replace: true,
+        });
+    };
+    
+    const resetFilters = () => {
+        setSearchTerm('');
+        setActiveFilter('');
+        setSelectedKategori('');
+        setSelectedMerek('');
+        router.get(route('global-products.index'), {}, {
+            preserveState: false,
             replace: true,
         });
     };
@@ -77,40 +120,63 @@ export default function Index({ products, filters = {} }) {
                             </Link>
                         </div>
                         
-                        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-                            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-                                <div className="flex-1">
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        placeholder="Cari berdasarkan nama, kode, kategori, atau merek..."
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div className="flex gap-2">
-                                    <button 
-                                        type="submit"
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
-                                    >
-                                        Cari
-                                    </button>
-                                    {searchTerm && (
-                                        <button 
-                                            type="button"
-                                            onClick={() => {
-                                                setSearchTerm('');
-                                                router.get(route('global-products.index'), { filter: activeFilter });
-                                            }}
-                                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-300"
-                                        >
-                                            Reset
-                                        </button>
-                                    )}
-                                </div>
-                            </form>
-                            
-                            <div className="mt-3 flex flex-wrap gap-2">
+                         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+                             <form onSubmit={handleSearch} className="flex flex-col gap-4">
+                                 <div className="flex flex-col md:flex-row gap-4">
+                                     <div className="flex-1">
+                                         <input
+                                             type="text"
+                                             value={searchTerm}
+                                             onChange={(e) => setSearchTerm(e.target.value)}
+                                             placeholder="Cari berdasarkan nama, kode, kategori, atau merek..."
+                                             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                         />
+                                     </div>
+                                     <div className="flex gap-2">
+                                         <button 
+                                             type="submit"
+                                             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-300"
+                                         >
+                                             Cari
+                                         </button>
+                                         {(searchTerm || activeFilter || selectedKategori || selectedMerek) && (
+                                             <button 
+                                                 type="button"
+                                                 onClick={resetFilters}
+                                                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-300"
+                                             >
+                                                 Reset
+                                             </button>
+                                         )}
+                                     </div>
+                                 </div>
+                                 
+                                 <div className="flex flex-wrap gap-4">
+                                     <select
+                                         value={selectedKategori}
+                                         onChange={handleKategoriChange}
+                                         className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                     >
+                                         <option value="">Semua Kategori</option>
+                                         {filterOptions.kategori?.map((kat) => (
+                                             <option key={kat} value={kat}>{kat}</option>
+                                         ))}
+                                     </select>
+                                     
+                                     <select
+                                         value={selectedMerek}
+                                         onChange={handleMerekChange}
+                                         className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                     >
+                                         <option value="">Semua Merek</option>
+                                         {filterOptions.merek?.map((brand) => (
+                                             <option key={brand} value={brand}>{brand}</option>
+                                         ))}
+                                     </select>
+                                 </div>
+                             </form>
+                             
+                             <div className="mt-3 flex flex-wrap gap-2">
                                 <button 
                                     onClick={() => handleFilterChange('')}
                                     className={`px-3 py-1 text-xs rounded-full ${activeFilter === '' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}

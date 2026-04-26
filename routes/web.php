@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppDownloadController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GlobalProductController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QRCodeController;
@@ -54,6 +55,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::post('products/verify-code', [ProductController::class, 'verifyProductCode'])
         ->name('products.verify-code');
+
+    // Rute untuk halaman produk global (Rakha)
+    Route::resource('global-products', GlobalProductController::class);
 
     // Rute untuk halaman pelanggan dan transaksi (Anggota 6)
     Route::resource('customers', CustomerController::class);

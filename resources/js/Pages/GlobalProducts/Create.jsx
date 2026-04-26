@@ -98,6 +98,7 @@ export default function Create() {
                                             className="mt-1 block w-full"
                                             value={data.kode_produk}
                                             onChange={(e) => setData('kode_produk', e.target.value)}
+                                            required
                                         />
                                         <InputError message={errors.kode_produk} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
@@ -113,18 +114,20 @@ export default function Create() {
                                             className="mt-1 block w-full"
                                             value={data.nama_produk}
                                             onChange={(e) => setData('nama_produk', e.target.value)}
+                                            required
                                         />
                                         <InputError message={errors.nama_produk} className="mt-2" />
                                     </div>
 
                                     <div>
-                                        <InputLabel htmlFor="kategori" value="Kategori" />
+                                        <InputLabel htmlFor="kategori" value="Kategori *" />
                                         <TextInput
                                             id="kategori"
                                             type="text"
                                             className="mt-1 block w-full"
                                             value={data.kategori}
                                             onChange={(e) => setData('kategori', e.target.value)}
+                                            required
                                         />
                                         <InputError message={errors.kategori} className="mt-2" />
                                     </div>

@@ -249,7 +249,7 @@ const FooterSection = () => {
                                 <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Syarat & Ketentuan</a>
                             </li>
                             <li>
-                                <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
+                                <a href="#faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</a>
                             </li>
                         </ul>
                     </div>

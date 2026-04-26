@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import Sidebar from '@/Components/Dashboard/Sidebar';
 import DashboardHeader from '@/Components/Dashboard/DashboardHeader';
@@ -9,146 +9,202 @@ import InputError from '@/Components/InputError';
 import TextArea from '@/Components/TextArea';
 import FlashMessage from '@/Components/FlashMessage';
 
-export default function Create() {
-    const { errors } = usePage().props;
+export default function Create({ users = [], catalogProducts = [] }) {
+    const { auth, errors } = usePage().props;
+    const user = auth?.user;
+
     const [previewImage, setPreviewImage] = useState(null);
-    const [verificationStatus, setVerificationStatus] = useState(null);
+    const [imageError, setImageError] = useState(null);
     const [verifying, setVerifying] = useState(false);
-    
+    const [verificationStatus, setVerificationStatus] = useState(null);
+
     const { data, setData, post, processing } = useForm({
+        // Required user selection (store)
+        user_id: '',
+        // Optional reference to global product
+        global_product_id: '',
+        // Fields
         kode_produk: '',
         nama_produk: '',
         kategori: '',
         merek: '',
         deskripsi: '',
+        jumlah_produk: '',
+        harga_modal: '',
+        harga_jual: '',
         gambar_produk: null,
-        global_product_id: null,
-    });    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(route('products.store'), {
-            forceFormData: true,
-        });
+    });
+
+    // When a global product is selected, auto-fill fields
+    const handleGlobalProductChange = (e) => {
+        const productId = e.target.value;
+        setData('global_product_id', productId);
+        setData('kode_produk', '');
+        setData('kategori', '');
+        setData('merek', '');
+        setData('deskripsi', '');
+        setPreviewImage(null);
+
+        if (productId) {
+            const selected = catalogProducts.find(p => p.id == productId);
+            if (selected) {
+                setData(prev => ({
+                    ...prev,
+                    nama_produk: selected.nama_produk,
+                }));
+                // Auto-fill others if not manually edited later? Let's set them now
+                setData('kode_produk', selected.kode_produk);
+                setData('kategori', selected.kategori || '');
+                setData('merek', selected.merek || '');
+                setData('deskripsi', selected.deskripsi || '');
+                if (selected.gambar_produk) {
+                    setPreviewImage(`/storage/${selected.gambar_produk}`);
+                }
+            }
+        }
     };
-    
-    const verifyProductCode = () => {
+
+    const verifyProductCode = async () => {
         if (!data.kode_produk || data.kode_produk.trim() === '') {
-            setVerificationStatus({
-                status: 'error',
-                message: 'Kode produk tidak boleh kosong'
-            });
+            setVerificationStatus({ status: 'error', message: 'Kode produk tidak boleh kosong' });
             return;
         }
-        
         setVerifying(true);
         setVerificationStatus(null);
-          // Call the API to verify the product code
-        fetch(route('products.verify-code'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify({ kode_produk: data.kode_produk }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                setVerificationStatus({
-                    status: 'success',
-                    message: data.message,
-                    product: data.product
-                });
-                
-                // If verification is successful, we can pre-fill some fields
-                if (data.product) {
-                    setData(prevData => ({
-                        ...prevData,
-                        global_product_id: data.product.id,
-                        nama_produk: data.product.nama_produk,
-                        kategori: data.product.kategori || prevData.kategori,
-                        merek: data.product.merek || prevData.merek,
-                    }));
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const response = await fetch(route('products.verify-code'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ kode_produk: data.kode_produk }),
+            });
+
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const message = payload?.message || 'Terjadi kesalahan saat verifikasi kode produk';
+                setVerificationStatus({ status: 'error', message });
+                return;
+            }
+
+            if (payload?.success) {
+                setVerificationStatus({ status: 'success', message: payload.message, product: payload.product });
+                // Set global product reference, copy fields if needed
+                if (payload.product) {
+                    setData('global_product_id', payload.product.id);
+                    // Pre-fill other fields only if empty (manual inputs may take precedence)
+                    if (!data.nama_produk) setData('nama_produk', payload.product.nama_produk);
+                    if (!data.kategori) setData('kategori', payload.product.kategori || '');
+                    if (!data.merek) setData('merek', payload.product.merek || '');
+                    if (!data.deskripsi) setData('deskripsi', payload.product.deskripsi || '');
+                    if (payload.product.gambar_produk) {
+                        setPreviewImage(`/storage/${payload.product.gambar_produk}`);
+                    }
                 }
             } else {
-                setVerificationStatus({
-                    status: 'error',
-                    message: data.message || 'Kode produk tidak valid'
-                });
+                setVerificationStatus({ status: 'error', message: payload?.message || 'Kode produk tidak valid' });
             }
-        })
-        .catch(error => {
-            console.error('Error verifying product code:', error);
-            setVerificationStatus({
-                status: 'error',
-                message: 'Terjadi kesalahan saat verifikasi kode produk'
-            });
-        })
-        .finally(() => {
+        } catch {
+            setVerificationStatus({ status: 'error', message: 'Terjadi kesalahan saat verifikasi kode produk' });
+        } finally {
             setVerifying(false);
-        });
+        }
     };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        
-        // Validate file type
+        if (!file) return;
         const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (file && !validTypes.includes(file.type)) {
+        if (!validTypes.includes(file.type)) {
             setData('gambar_produk', null);
-            const error = {
-                gambar_produk: 'File harus berupa gambar (JPG, PNG, GIF, atau WEBP)'
-            };
-            usePage().props.errors = error;
+            setImageError('File harus berupa gambar (JPG, PNG, GIF, atau WEBP)');
             return;
         }
-        
-        // Validate file size (max 2MB)
-        if (file && file.size > 2 * 1024 * 1024) {
+        if (file.size > 2 * 1024 * 1024) {
             setData('gambar_produk', null);
-            const error = {
-                gambar_produk: 'Ukuran gambar maksimal 2MB'
-            };
-            usePage().props.errors = error;
+            setImageError('Ukuran gambar maksimal 2MB');
             return;
         }
-        
+        setImageError(null);
         setData('gambar_produk', file);
-        
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewImage(reader.result);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            setPreviewImage(null);
-        }
+        const reader = new FileReader();
+        reader.onloadend = () => setPreviewImage(reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        post(route('products.store'), { forceFormData: true });
     };
 
     return (
         <div className="min-h-screen bg-white">
-            <Head title="Tambah Produk" />
+            <Head title="Tambah Produk ke Inventory" />
             
-            {/* Header */}            <DashboardHeader 
-                pageTitle="Tambah Produk" 
+            <DashboardHeader 
+                pageTitle="Tambah Produk ke Inventory" 
                 breadcrumb={[
                     { label: 'Produk', url: route('products.index') },
                     { label: 'Tambah Produk' }
                 ]}
             />
             
-            {/* Layout Utama */}
             <div className="flex min-h-screen pt-20">
                 <Sidebar />
-
-                {/* Konten Utama */}
                 <main className="flex-1 ml-64 p-6 lg:p-8 overflow-y-auto bg-white">
                     <PageTransition>
                         <div className="bg-white p-6 rounded-lg shadow-md">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    
+                                    {/* Store selection (User) */}
                                     <div>
-                                        <InputLabel htmlFor="kode_produk" value="Kode Produk" required />
+                                        <InputLabel htmlFor="user_id" value="Pilih Toko / Store" required />
+                                        <select
+                                            id="user_id"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                                            value={data.user_id}
+                                            onChange={(e) => setData('user_id', e.target.value)}
+                                            required
+                                        >
+                                            <option value="">-- Pilih Toko --</option>
+                                            {users.map(u => (
+                                                <option key={u.id} value={u.id}>
+                                                    {u.storeName} ({u.name})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.user_id} className="mt-2" />
+                                    </div>
+
+                                    {/* Global Product selection */}
+                                    <div>
+                                        <InputLabel htmlFor="global_product_id" value="Pilih Produk Global (Opsional)" />
+                                        <select
+                                            id="global_product_id"
+                                            className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                                            value={data.global_product_id}
+                                            onChange={handleGlobalProductChange}
+                                        >
+                                            <option value="">-- Pilih Produk Global --</option>
+                                            {catalogProducts.map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.kode_produk} - {p.nama_produk}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.global_product_id} className="mt-2" />
+                                    </div>
+
+                                    {/* Product code with verification */}
+                                    <div>
+                                        <InputLabel htmlFor="kode_produk" value="Kode Produk" />
                                         <div className="flex mt-1">
                                             <TextInput
                                                 id="kode_produk"
@@ -166,14 +222,9 @@ export default function Create() {
                                                 onClick={verifyProductCode}
                                                 disabled={verifying || !data.kode_produk}
                                             >
-                                                {verifying ? (
-                                                    <span>Memverifikasi...</span>
-                                                ) : (
-                                                    <span>Verifikasi</span>
-                                                )}
+                                                {verifying ? 'Memverifikasi...' : 'Verifikasi'}
                                             </button>
                                         </div>
-                                        
                                         {verificationStatus && (
                                             <div className={`mt-2 p-2 text-sm rounded-md ${
                                                 verificationStatus.status === 'success' 
@@ -183,13 +234,13 @@ export default function Create() {
                                                 {verificationStatus.message}
                                             </div>
                                         )}
-                                        
                                         <InputError message={errors.kode_produk} className="mt-2" />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Kode produk akan diverifikasi dengan repositori produk global.
+                                            Verifikasi kode produk dengan repositori global.
                                         </p>
                                     </div>
 
+                                    {/* Product name */}
                                     <div>
                                         <InputLabel htmlFor="nama_produk" value="Nama Produk" required />
                                         <TextInput
@@ -202,6 +253,7 @@ export default function Create() {
                                         <InputError message={errors.nama_produk} className="mt-2" />
                                     </div>
 
+                                    {/* Category */}
                                     <div>
                                         <InputLabel htmlFor="kategori" value="Kategori" />
                                         <TextInput
@@ -214,6 +266,7 @@ export default function Create() {
                                         <InputError message={errors.kategori} className="mt-2" />
                                     </div>
 
+                                    {/* Brand */}
                                     <div>
                                         <InputLabel htmlFor="merek" value="Merek" />
                                         <TextInput
@@ -226,6 +279,51 @@ export default function Create() {
                                         <InputError message={errors.merek} className="mt-2" />
                                     </div>
 
+                                    {/* Stock quantity */}
+                                    <div>
+                                        <InputLabel htmlFor="jumlah_produk" value="Jumlah Produk (Stok)" required />
+                                        <TextInput
+                                            id="jumlah_produk"
+                                            type="number"
+                                            min="0"
+                                            className="mt-1 block w-full"
+                                            value={data.jumlah_produk}
+                                            onChange={(e) => setData('jumlah_produk', e.target.value)}
+                                        />
+                                        <InputError message={errors.jumlah_produk} className="mt-2" />
+                                    </div>
+
+                                    {/* Cost price */}
+                                    <div>
+                                        <InputLabel htmlFor="harga_modal" value="Harga Modal" required />
+                                        <TextInput
+                                            id="harga_modal"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            className="mt-1 block w-full"
+                                            value={data.harga_modal}
+                                            onChange={(e) => setData('harga_modal', e.target.value)}
+                                        />
+                                        <InputError message={errors.harga_modal} className="mt-2" />
+                                    </div>
+
+                                    {/* Selling price */}
+                                    <div>
+                                        <InputLabel htmlFor="harga_jual" value="Harga Jual" required />
+                                        <TextInput
+                                            id="harga_jual"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            className="mt-1 block w-full"
+                                            value={data.harga_jual}
+                                            onChange={(e) => setData('harga_jual', e.target.value)}
+                                        />
+                                        <InputError message={errors.harga_jual} className="mt-2" />
+                                    </div>
+
+                                    {/* Description */}
                                     <div className="md:col-span-2">
                                         <InputLabel htmlFor="deskripsi" value="Deskripsi" />
                                         <TextArea
@@ -237,27 +335,33 @@ export default function Create() {
                                         <InputError message={errors.deskripsi} className="mt-2" />
                                     </div>
 
+                                    {/* Image upload */}
                                     <div className="md:col-span-2">
-                                        <InputLabel htmlFor="gambar_produk" value="Gambar Produk" />
+                                        <InputLabel htmlFor="gambar_produk" value="Gambar Produk (Opsional)" />
                                         <input
                                             id="gambar_produk"
                                             type="file"
-                                            className="mt-1 block w-full text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                            className="mt-1 block w-full text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200"
                                             onChange={handleImageChange}
                                             accept="image/*"
                                         />
-                                        <InputError message={errors.gambar_produk} className="mt-2" />
+                                        <InputError message={imageError || errors.gambar_produk} className="mt-2" />
                                         
-                                        {previewImage && (
+                                        {(previewImage || (data.gambar_produk && typeof data.gambar_produk === 'string')) && (
                                             <div className="mt-4">
                                                 <p className="text-sm text-gray-600 mb-2">Preview:</p>
-                                                <img src={previewImage} alt="Preview" className="max-w-xs rounded-md" />
+                                                <img 
+                                                    src={previewImage || `/storage/${data.gambar_produk}`} 
+                                                    alt="Preview" 
+                                                    className="max-w-xs rounded-md border border-gray-200" 
+                                                />
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-end space-x-3">                                    <Link
+                                <div className="flex items-center justify-end space-x-3">
+                                    <Link
                                         href={route('products.index')}
                                         className="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none transition-colors duration-300"
                                     >
@@ -268,7 +372,7 @@ export default function Create() {
                                         className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none transition-colors duration-300"
                                         disabled={processing}
                                     >
-                                        {processing ? 'Menyimpan...' : 'Simpan'}
+                                        {processing ? 'Menyimpan...' : 'Tambah ke Inventory'}
                                     </button>
                                 </div>
                             </form>
