@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $totalProducts = Product::count();
         $totalCustomers = Customer::count();
         $totalTransactions = Transaction::count();
-        $totalActivities = AdminActivityLog::count(); 
+        $totalActivities = AdminActivityLog::count();
         
         $statsData = [
             ['title' => 'Total Produk', 'value' => (string)$totalProducts, 'icon' => 'BoxIcon'],
