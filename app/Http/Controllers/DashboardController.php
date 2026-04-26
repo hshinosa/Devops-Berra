@@ -38,7 +38,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc');
 
         if ($dateFilter) {
-            // date filter is 'YYYY-MM-DD'
+            // date filter format is 'YYYY-MM-DD'
             $activitiesQuery->whereDate('created_at', $dateFilter);
         }
 
