@@ -18,7 +18,7 @@ class Transaction extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'id_pengguna',
+        'user_id',
         'tanggal_transaksi',
         'total_belanja',
         'total_modal',
@@ -29,8 +29,12 @@ class Transaction extends Model
         'jumlah_bayar',
         'jumlah_kembali',
         'id_transaksi_hutang',
-        'is_deleted',
-        'deleted_at'
+        'nomor_nota',
+        'total_diskon',
+        'pajak',
+        'kasir',
+        'catatan',
+        'shift',
     ];
 
     /**
@@ -45,7 +49,6 @@ class Transaction extends Model
         'jumlah_bayar' => 'decimal:2',
         'jumlah_kembali' => 'decimal:2',
         'detail_items' => 'array',
-        'is_deleted' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 
@@ -54,7 +57,7 @@ class Transaction extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id_pengguna');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -78,6 +81,6 @@ class Transaction extends Model
      */
     public function scopeActive(Builder $query): void
     {
-        $query->where('is_deleted', false);
+        // No need to add conditions since SoftDeletes is used
     }
 }
