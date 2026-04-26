@@ -102,9 +102,9 @@ return [
     */
 
     'passwords' => [
-        'admins' => [ // Pastikan ini untuk provider 'admins'
+        'admins' => [
             'provider' => 'admins',
-            'table' => 'admin_password_reset_tokens', // Ganti ke tabel baru
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
